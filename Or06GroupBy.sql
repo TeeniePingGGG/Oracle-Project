@@ -221,7 +221,7 @@ select department_id, job_id, count(*), avg(salary)
     제외시키고, 결과를 급여의 내림차순으로 정렬하여 출력하시오. 
 */
 --관리자가 없는 사원은 물리적으로 존재하므로 where절에 기술
---최저급여는 그룹함수를 통해 만들어진 결과이므로 having절에 기숭
+--최저급여는 그룹함수를 통해 만들어진 결과이므로 having절에 기술
 --select절에 사용한 가상의 컬럼(계산식 등)은 order by절에 사용할 수 있음
 select job_id, min(salary)
     from employees
