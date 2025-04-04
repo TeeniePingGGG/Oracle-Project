@@ -58,6 +58,82 @@ rollback;
 select * from tb_sample;
 
 
+/*
+레코드 수정하기:update
+형식] update 테이블명 set 컬럼=값 where 조건;
+※조건이 없는 경우 모든 레코드가 한꺼번에 수정된다.
+※테이블명 앞에 from이 들어가지 않는다.
+*/
+--번호가 40인 레코드의 지역을 '미국'으로 수정하시오
+update tb_sample set loc='미국' where no=40;
+select * from tb_sample;
+
+--지역이 서울인 레코드의 메니저명을 '제갈공명'으로 변경하시오
+update tb_sample set manager='제갈공명' where loc='서울';
+select * from tb_sample;
+
+--모든 레코드를 대상으로 지역을 '가디'로 변경하시오.
+update tb_sample set loc='가디';
+--전체 레코드를 대상으로 하는 경우 where절을 생략하면 된다.
+select * from tb_sample;
+
+/*
+레코드 삭제하기: delete
+형식] delete from 테이블명 where 조건;
+레코드를 삭제하므로 delete뒤에 컬럼을 명시하지 않는다.
+*/
+--번호 10인 레코드를 삭제하시오
+delete from tb_sample where no=10;
+select * from tb_sample;
+
+--레코드를 전체를 삭제하시오
+delete from tb_sample;
+select * from tb_sample;
+
+--마지막 커밋했던 지점으로 되돌린다.
+rollback;
+select * from tb_sample;
+
+
+/*
+DDL문: 테이블을 생성 및 조작하는 쿼리문
+    (Data Definition Language: 데이터 정의어)
+    테이블 생성: crate table 테이블명
+    테이블 수정  
+        컬럼추가: alter table 테이블명 add 컬럼명
+        컬럼수정: alter table 테이블명 modify 컬럼명
+        컬럼삭제: alter table 테이블명 drop column 컬럼명
+    테이블 삭제: drop table 테이블명
+    
+DML문: 레코드를 입력 및 조작하는 쿼리문
+    (Data Manipulation Language: 데이터 조작어)
+    레코드 입력: insert into 테이블명(컬럼명) values(값)
+    레코드 수정: update 테이블명 set 컬럼=값 where 조건
+    레코드 삭제: delete from 테이블명 where 조건
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
