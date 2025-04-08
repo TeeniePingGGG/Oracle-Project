@@ -1,5 +1,5 @@
 /*
-파일며이 Or09Join.sql
+파일명 Or09Join.sql
 테이블 조인
 설명: 2개 이상의 테이블을 동시에 참조하여 데이터를 인출해야 할떄
     사용하는 sql문
@@ -392,4 +392,52 @@ from employees
 where
      to_char(hire_date,'yyyy')='2005' and 
      city ='South San Francisco' and state_province='California';
+
+
+/*
+1. inner join 방식중 오라클방식을 사용하여 first_name 이 Janette 인 사원의 부서ID와 부서명을 출력하시오.
+출력목록] 부서ID, 부서명
+*/
+select D.department_id, department_name,first_name
+from employees E, departments D
+where E.department_id = D.department_id and first_name='Janette';
+/*
+오라클 방식은 표준방식에서 inner join대신 콤마를 이용해서
+테이블을 조인하고 on절 대신 where절에 조인될 컬럼을 명시한다.*/
+
+
+/*
+2. inner join 방식중 SQL표준 방식을 사용하여 사원이름과 함께 
+그 사원이 소속된 부서명과 도시명을 출력하시오
+출력목록] 사원이름, 부서명, 도시명
+*/
+select
+    first_name, last_name, department_name, city
+from employees Emp
+    inner join departments Dep on Emp.department_id = Dep.department_id
+    inner join locations Loc on Dep.location_id = Loc.location_id;
+
+
+
+/*
+3. 사원의 이름(FIRST_NAME)에 'A'가 포함된 모든사원의 이름과 부서명을 출력하시오.
+출력목록] 사원이름, 부서명
+*/
+select first_name, department_name
+from employees E, departments D
+where E.department_id = D.department_id and first_name like '%A%';
+
+
+/*
+4. “city : Toronto / state_province : Ontario” 에서 근무하는 
+모든 사원의 이름, 업무명, 부서번호 및 부서명을 출력하시오.
+출력목록] 사원이름, 업무명, 부서ID, 부서명
+*/
+select first_name, last_name, job_title,
+    department_id, department_name
+from locations 
+    inner join departments using(location_id)
+    inner join employees using(department_id)
+    inner join jobs using(job_id)
+where city='Toronto' and state_province='Ontario';
 

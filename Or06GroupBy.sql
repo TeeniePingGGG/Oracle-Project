@@ -231,8 +231,28 @@ select job_id, min(salary)
     order by min(salary) desc;
 
 
+/*
+1. 전체 사원의 급여최고액, 최저액, 평균급여를 출력하시오. 컬럼의 별칭은 아래와 같이 하고, 
+평균에 대해서는 정수형태로 반올림 하시오.
+별칭) 급여최고액 -> MaxPay
+급여최저액 -> MinPay
+급여평균 -> AvgPay
+
+*/
+select * from employees;
+select
+    trim(to_char(max(salary),'999,000'))as MaxPay,
+    min(salary) MinPay,
+    round(avg(salary)) AvgPay
+from employees;        
 
 
+/*
+4. 급여가 10000달러 이상인 직원들의 담당업무별 합계인원수를 출력하시오.
+*/
+select job_id, count(*) "직원수"
+from employees where salary>=1000
+group by job_id;
 
 
 
