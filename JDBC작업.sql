@@ -120,6 +120,251 @@ select * from board;
 
 commit;
 
+/**********************************************************************/
+--JDBC > CallableStatement 인터페이스 사용하기
+
+--eduction계정에서 실습합니다.
+
+--예제1-1] 함수 : fillAsterik()
+
+--substr(문자열 혹은 컬럼, 시작인덱스, 길이): 시작인덱스부터 길이만큼
+--  잘라낸다.
+select substr('honglildong',1,1) from dual;
+
+--rpad(문자열 혹은 컬럼, 길이, 채울문자): 문자열의 남은 길이를 문자로 채움
+select rpad('h',10,'*') from dual;
+/*위 2개의 쿼리를 병합해서 문자열(아이디)의 첫글자를 제외한 나머지
+부분을 *로 마스킹 처리하는 쿼리문을 생성한다.*/
+select rpad(substr('honglildong',1,1),length('honglildong'),'*')
+    from dual;
+    
+--함수생성    
+create or replace function fillAsterik(
+    idStr VARCHAR2 /*인파라미터는 문자형으로 설정*/
+)
+return VARCHAR2 /*반환타입도 문자형으로 설정*/
+is
+    retStr VARCHAR2(50); /*마스킹 후 반환할 문자열을 저장할 변수 선언*/
+begin
+    /*인파라미터로 전달받은 아이디를 마스킹 처리 후 반환*/
+    retStr:=rpad(substr(idStr,1,1),length(idStr),'*');
+    return retStr;
+end;
+/
+
+select fillAsterik('honglildong') from dual;
+--예제1-1] 함수 : fillAsterik()
+select substr('honglildong',1,1) from dual;
+select rpad('h',10,'*') from dual;
+select rpad(substr('honglildong',1,1),length('honglildong'),'*')
+    from dual;
+    
+create or replace function fillAsterik(
+    idStr VARCHAR2
+)
+return VARCHAR2
+is
+    retStr VARCHAR2(50);
+begin
+    retStr:=rpad(substr(idStr,1,1),length(idStr),'*');
+    return retStr;
+end;
+/
+--우리가 전달한 문자열이 마스킹 처리 되는지 확인
+select fillAsterik('honglildong') from dual;
+select fillAsterik('oracle21c') from dual;
+select fillAsterik('hello') from dual;
+
+
+--생성한 함수는 즉시 테이블에 적용할 수 있다.
+select * from member;
+--회원테이블의 id컬럼을 마스킹 처리한다
+select fillAsterik(id) from member;
+
+
+/*
+시나리오] member 테이블에 새로운 회원정보를 입력하는 프로시저를 생성하시오
+    파라미터 : In => 아이디, 패스워드, 이름
+                    Out => returnVal(성공:1, 실패:0)
+*/
+create or replace PROCEDURE MyMemberInsert(
+    /*Java에서 입력한 값을 받을 인파라미터 정의*/
+    p_id in varchar2,
+    p_pass in varchar2,
+    p_name in varchar2,
+    /*입력성공여부를 반환할 숫자형식의 아웃파라미터*/
+    returnVal out NUMBER
+)
+is --변수 선언 없음
+begin 
+    --인파라미터를 통해 회원정보를 입력하는 insert 쿼리문 작성
+    insert into member(id,pass,name)
+        values(p_id, p_pass, p_name);
+     --입력이 정상적으로 처리되면 true를 반환   
+    if sql%found then
+        --입력에 성공한 행의 갯수를 얻어와서 아웃파라미터에 저장
+        returnVal :=sql%rowcount;
+        --행의 변화가 생기므로 반드시 커밋 해야한다.
+        commit;
+    else
+        --실패한 경우에는 0을 반환
+        returnVal:=0;
+    end if;
+    --프로시저는 별도의 return없이 아웃파라미터에 값을 할당하기만 하면된다.
+end;
+/
+
+set serveroutput on;
+
+var i_result varchar2(10);
+execute MyMemberInsert('pro01','1111','프로시저1',:i_result);
+execute MyMemberInsert('pro04','2222','프로시저2',:i_result);
+--결과확인
+print i_result;
+--레코드가 입력되었는지 테이블에서 직접 확인
+select * from member;
+
+
+
+--레코드 확인하기
+select * from trigger_dept_original;
+/*오리지날 테이블에서 5개의 레코드가 수정되었지만 테이블 단위 트리거이므로
+백업테이블에는 1개의 레코드만 삽입된다.*/
+select * from trigger_dept_backup;
+
+
+/*
+시나리오] member테이블에서 레코드를 삭제하는 프로시저를 생성하시오
+    파라미터 : In => member_id(아이디)
+                    Out => returnVal(SUCCESS/FAIL 반환)   
+*/
+create or replace PROCEDURE MyMemberDelete(
+    /*인파라미터: 삭제할 아이디*/
+    member_id in varchar2,
+    /*아웃파라미터: 삭제 결과*/
+    returnVal out varchar2
+)
+is
+begin
+    --인파라미터로 전달된 아이디를 삭제하는 delete 쿼리문 작성
+    delete from member where id=member_id;
+    
+    if SQL%Found then
+        --회원 레코드가 정상적으로 삭제되면....
+        returnVal:='SUCCESS';
+        --커밋한다.
+        commit;
+    else
+        --삭제할 아이디가 존재하지 않는다면 FAIL을 반환
+        returnVal:='FAIL';
+    end if;
+end;
+/
+
+set serveroutput on;
+
+--프로시저 테스트를 위한 바인드 변수 생성
+var delete_var varchar2(10);
+--존재하지 않는 아이디로 테스트
+execute MyMemberDelete('ㅅㄷ',:delete_var);
+--존재하는 아이디로 테스트
+execute MyMemberDelete('pro01',:delete_var);
+
+print delete_var;
+
+select * from member;
+
+
+
+/*
+시나리오] 아이디와 패스워드를 매개변수로 전달받아서 회원인지 여부를 판단하는 프로시저를 작성하시오. 
+    매개변수 : 
+        In -> user_id, user_pass
+        Out -> returnVal
+    반환값 : 
+        0 -> 회원인증실패(둘다틀림)
+        1 -> 아이디는 일치하나 패스워드가 틀린경우
+        2 -> 아이디/패스워드 모두 일치하여 회원인증 성공
+    프로시저명 : MyMemberAuth
+*/
+
+create or replace PROCEDURE MyMemberAuth(
+    /*인파라미터: 아이디, 비번*/
+    user_id in varchar2,
+    user_pass in varchar2,
+    /*아웃파라미터: 0~2사이의 숫자*/
+    returnVal out number
+)
+is
+    --count(*)를 통해 반환되는 값 저장
+    member_count number(1):=0;
+    --조회할 회원의 패스워드를 저장
+    member_pw varchar2(50);
+begin
+    --쿼리1: 아이디가 존재하는지 확인
+    select count(*) 
+        into member_count
+    from member
+        where id=user_id;
+    
+    --회원아이디가 존재하는 경우라면..........
+    if member_count=1 then
+        --쿼리2: 패스워드 확인을 위한 쿼리문 실행
+        select pass 
+            into member_pw
+        from member
+            where id=user_id;
+     --인파라미터로 전달된 비번과 DB에서 가져온 비번 비교       
+    if member_pw=user_pass then
+        --둘다 일치하는 경우 2로 설정
+        returnVal:=2;
+    else
+        --아이디만 일치하는 경우 1로 설정(비번틀림)
+        returnVal:=1;
+    end if;
+    else
+        --회원정보가 틀린 경우 0으로 설정
+        returnVal:=0;
+    end if;
+end;
+/
+
+--바인드 변수 생성
+variable member_auth number;
+
+-- 둘다 일치하는 경우(인증 성공)
+execute MyMemberAuth('pro04','2222',:member_auth);
+print member_auth;
+
+--아이디만 있는 경우
+execute MyMemberAuth('pro04','ffff',:member_auth);
+print member_auth;
+--회원정보가 없는 경우
+execute MyMemberAuth('코딱지','2222',:member_auth);
+print member_auth;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
