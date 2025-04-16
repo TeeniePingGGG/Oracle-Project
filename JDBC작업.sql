@@ -346,20 +346,96 @@ print member_auth;
 
 
 
+--------------------개인프로젝트------------------------------------------------
+/*
+테이블 생성
+테이블명 : banking
+컬럼 : 일련번호, 계좌번호, 이름, 잔액, 이자율
+primary key, not null과 같은 제약조건 추가 
+시퀀스 생성
+시퀀스명 : seq_banking_idx
+*/
 
 
+create table banking(
+    num number primary key,
+    acnum varchar2(50) not null,
+    name varchar2(30) not null,
+    money number ,
+    basicInterestRate number
+);
+select * from banking;
+
+create sequence seq_banking_idx
+
+    increment by 1
+    start with 1
+    minvalue 1
+    /*최대값, 사이클, 캐시메모리 사용을 모두 NO지정*/
+    nomaxvalue
+    nocycle
+    nocache;
 
 
+-- 프로시저 생성
+CREATE OR REPLACE PROCEDURE DeleteAccount(
+    acnum_delete IN VARCHAR2,
+    returnVal OUT VARCHAR2
+)
+IS
+BEGIN
+    DELETE FROM banking WHERE acnum = acnum_delete;
+
+    IF SQL%ROWCOUNT > 0 THEN
+        returnVal := 'SUCCESS';
+        COMMIT;
+    ELSE
+        returnVal := 'FAIL';
+    END IF;
+END;
+/
 
 
+/*
+시나리오] member테이블에서 레코드를 삭제하는 프로시저를 생성하시오
+    파라미터 : In => member_id(아이디)
+                    Out => returnVal(SUCCESS/FAIL 반환)   
+*/
+create or replace PROCEDURE MyMemberDelete(
+    /*인파라미터: 삭제할 아이디*/
+    member_id in varchar2,
+    /*아웃파라미터: 삭제 결과*/
+    returnVal out varchar2
+)
+is
+begin
+    --인파라미터로 전달된 아이디를 삭제하는 delete 쿼리문 작성
+    delete from member where id=member_id;
+    
+    if SQL%Found then
+        --회원 레코드가 정상적으로 삭제되면....
+        returnVal:='SUCCESS';
+        --커밋한다.
+        commit;
+    else
+        --삭제할 아이디가 존재하지 않는다면 FAIL을 반환
+        returnVal:='FAIL';
+    end if;
+end;
+/
 
+set serveroutput on;
 
+--프로시저 테스트를 위한 바인드 변수 생성
+var delete_var varchar2(10);
+--존재하지 않는 아이디로 테스트
+execute MyMemberDelete('ㅅㄷ',:delete_var);
+--존재하는 아이디로 테스트
+execute MyMemberDelete('pro01',:delete_var);
 
+print delete_var;
 
-
-
-
-
+select * from member;
 
 
 
